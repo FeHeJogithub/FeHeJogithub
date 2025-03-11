@@ -1,0 +1,8 @@
+Algoritmo Suma
+	Escribir 'Digite un numero: ';
+	Leer numero_Uno;
+	Escribir 'Digite un segundo numero: ';
+	Leer  numero_Dos;
+	Suma_1 <- (numero_Uno+numero_Dos);
+	Escribir 'El resultado de la suma es: ', Suma_1, ' suma con fehejo ';
+FinAlgoritmo
