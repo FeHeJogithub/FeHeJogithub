@@ -1,5 +1,9 @@
 package org.fhernandez.java.jdbc;
 
+import org.fhernandez.java.jdbc.models.Product;
+import org.fhernandez.java.jdbc.models.repositories.ProductRepository;
+import org.fhernandez.java.jdbc.models.repositories.ProductRepositoryImpl;
+
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.awt.*;
@@ -21,6 +25,8 @@ private JTextField quantityField = new JTextField();
   //  private JTextField contryField = new JTextField();
 private ProductTableModel tableModel = new ProductTableModel();
 
+private ProductRepository productRepository;
+
 private long id;
 private int row;
 
@@ -29,6 +35,7 @@ super("Swing: GUI con base de Datos Mysql");
 
 p = getContentPane();
 p.setLayout (new BorderLayout(20,10));
+        productRepository   = new ProductRepositoryImpl();
 
 JPanel formPanel = new JPanel(new GridLayout(5,2,20,10));
 formPanel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
@@ -38,7 +45,7 @@ JButton buttonSave = new JButton("Guardar");
 formPanel.add(new JLabel("Nombre: "));
 formPanel.add(nameField);
 
-formPanel.add(new JLabel("Price: "));
+formPanel.add(new JLabel("Precio: "));
 formPanel.add(priceField);
 
 formPanel.add(new JLabel("Cantidad: "));
@@ -87,9 +94,14 @@ buttonSave.addActionListener(  e -> {
                 "Error en la validacion", JOptionPane.ERROR_MESSAGE);
 
     } else {
+
+        //guardar y editar
+        Product productDb = productRepository.save(new Product(id==0?null:id, name,price,quantity));
+
+
         if (id == 0) {
 
-            Object[] product = new Object[]{System.currentTimeMillis(), name, price, quantity, "remove"};
+            Object[] product = new Object[]{productDb.getId(), name, price, quantity, "remove"};
             tableModel.getRows().add(product);//crea un producto
             tableModel.fireTableDataChanged();
 
@@ -126,6 +138,7 @@ jTable.addMouseListener(new MouseAdapter() {
             int option= JOptionPane.showConfirmDialog(null, "Esta seguro que desea eliminar el registro " +
                     tableModel.getValueAt(row, 1).toString() + "?", "Cuidado Eliminar Itm",JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if(option == JOptionPane.OK_OPTION) {
+                productRepository.delete((long) tableModel.getValueAt(row, 0));
                 tableModel.getRows().remove(row);
                 tableModel.fireTableDataChanged();
             }
@@ -169,8 +182,22 @@ new JdbcSwingCrudProjectModificacionValidacion();
 
 
     private class ProductTableModel extends AbstractTableModel {
+
+
         private String[] columns = new String[]{"Id", "Nombre", "Precio", "Cantidad", "Delete"};
         private List<Object[]> rows =new ArrayList<>();
+
+
+        public ProductTableModel() {
+
+            ProductRepository productRepository   = new ProductRepositoryImpl();
+            List<Product> products = productRepository.findAll();
+            for (Product product: products){
+                Object[] row = {product.getId(), product.getName(), product.getPrice(), product.getQuantity(),
+                        "remove"};
+                rows.add(row);
+            }
+        }
 
         public List<Object[]> getRows() {
             return rows;
