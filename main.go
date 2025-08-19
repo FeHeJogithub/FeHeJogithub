@@ -1,161 +1,30 @@
 package main
 
 import (
+	"log"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"rpsweb/handlers"
 )
-
-type album struct {
-	ID     string  `json:"id`
-	Title  string  `json:"title`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
-}
-
-var albums = []album{
-
-	{ID: "1", Title: "Blue Train", Artist: "John Contrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 50.99},
-}
-
-func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, albums)
-
-}
-
-func postAlbums(c *gin.Context) {
-	var newAlbum album
-
-	if err := c.BindJSON(&newAlbum); err != nil {
-
-		return
-	}
-	albums = append(albums, newAlbum)
-
-	c.IndentedJSON(http.StatusCreated, newAlbum)
-
-}
-
-func getAlbumsByID(c *gin.Context) {
-
-	id := c.Param("id")
-
-	for _, a := range albums {
-
-		if a.ID == id {
-
-			c.IndentedJSON(http.StatusOK, a)
-			return
-
-		}
-	}
-
-	c.IndentedJSON(http.StatusNotFound, gin.H{
-
-		"message": "album no encontrado"})
-
-}
-func putAlbumsByID(c *gin.Context) {
-	id := c.Param("id")
-
-	var updatedAlbum album
-	if err := c.BindJSON(&updatedAlbum); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON inválido"})
-		return
-	}
-
-	for i, a := range albums {
-		if a.ID == id {
-			// Actualiza el álbum
-			updatedAlbum.ID = id // Mantiene el ID original
-			albums[i] = updatedAlbum
-
-			c.IndentedJSON(http.StatusOK, updatedAlbum)
-			return
-		}
-	}
-
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "álbum no encontrado"})
-}
-
-func deleteAlbumsByID(c *gin.Context) {
-	id := c.Param("id")
-
-	for i, a := range albums {
-		if a.ID == id {
-			// Eliminar el álbum del slice
-			albums = append(albums[:i], albums[i+1:]...)
-			c.IndentedJSON(http.StatusOK, gin.H{"message": "álbum eliminado"})
-			return
-		}
-	}
-
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "álbum no encontrado"})
-}
-
-/*func deleteAlbumsByID(c *gin.Context) {
-	id := c.Param("id")
-
-	var updatedAlbum album
-	if err := c.BindJSON(&updatedAlbum); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON inválido"})
-		return
-	}
-
-	for i, a := range albums {
-		if a.ID == id {
-			// Actualiza el álbum
-			updatedAlbum.ID = id // Mantiene el ID original
-			albums[i] = updatedAlbum
-
-			c.IndentedJSON(http.StatusOK, updatedAlbum)
-			return
-		}
-	}
-
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "álbum no encontrado"})
-}
-
-/*
-func putAlbumsByID(c *gin.Context) {
-
-	id := c.Param("id")
-
-	for _, a := range albums {
-
-		if a.ID == id {
-
-			c.IndentedJSON(http.StatusOK, a)
-			return
-
-		}
-	}
-
-	c.IndentedJSON(http.StatusNotFound, gin.H{
-
-		"message": "album no encontrado"})
-
-}*/
 
 func main() {
 
-	//fmt.Println("Bienvenido a vinyl-api con fehejo")
+	//crear enrutador
 
-	router := gin.Default()
+	router := http.NewServeMux()
+	//fs file static
+	fs := http.FileServer(http.Dir("static"))
 
-	//router.GET("/", func(c *gin.Context) {
-	//	c.JSON(200, gin.H{
+	router.Handle("/static/", http.StripPrefix("/static/", fs))
+	//configurar rutas
+	router.HandleFunc("/", handlers.Index)
 
-	//	"message": "Hola mundo con fehejo",
-	//})
-	//})
-	router.GET("/albums", getAlbums)
-	router.GET("/albums/:id", getAlbumsByID)
-	router.POST("/albums", postAlbums)
-	router.PUT("/albums/:id", putAlbumsByID)
-	router.DELETE("/albums/:id", deleteAlbumsByID)
+	router.HandleFunc("/new", handlers.NewGame)
 
-	router.Run("localhost:8080")
+	router.HandleFunc("/game", handlers.Game)
+	router.HandleFunc("/play", handlers.Play)
+	router.HandleFunc("/about", handlers.About)
+
+	port := ":8080"
+	log.Printf("Servidor escuchando en http://localhost%s\n", port)
+	log.Fatal(http.ListenAndServe(port, router))
 }
