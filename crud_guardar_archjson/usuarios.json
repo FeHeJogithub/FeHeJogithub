@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "nombre": "Fernando",
+    "email": "fernandohernandezj@gmail.com",
+    "edad": 56
+  },
+  {
+    "id": 2,
+    "nombre": "Maria Fernanda",
+    "email": "mariaf0317@gmail.com",
+    "edad": 18
+  },
+  {
+    "id": 3,
+    "nombre": "Cristian de Jesus",
+    "email": "crihepe@gmail.com",
+    "edad": 23
+  },
+  {
+    "id": 4,
+    "nombre": "Fernando Enmanuel ",
+    "email": "fehepe11@gmail.com",
+    "edad": 27
+  },
+  {
+    "id": 5,
+    "nombre": "Carmen Nidia",
+    "email": "nidia@gmail.com",
+    "edad": 52
+  }
+]

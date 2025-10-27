@@ -1,0 +1,391 @@
+<!--<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Usuarios (CRUD)</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    input { margin: 5px; padding: 5px; }
+    button { padding: 6px 12px; cursor: pointer; }
+    table { margin-top: 20px; border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    tr:hover { background-color: #f5f5f5; }
+  </style>
+</head>
+<body>
+  <h1>👥 CRUD de Usuarios</h1>
+
+  <form id="form">
+    <input type="hidden" id="id">
+    <input type="text" id="nombre" placeholder="Nombre" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="number" id="edad" placeholder="Edad" required>
+    <button type="submit">Guardar</button>
+  </form>
+
+  <table id="tabla">
+    <thead>
+      <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Edad</th><th>Acciones</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById('form');
+    const tabla = document.querySelector('#tabla tbody');
+    const idInput = document.getElementById('id');
+    const nombreInput = document.getElementById('nombre');
+    const emailInput = document.getElementById('email');
+    const edadInput = document.getElementById('edad');
+
+    async function cargarUsuarios() {
+      const res = await fetch('/usuarios');
+      const data = await res.json();
+      tabla.innerHTML = '';
+      data.forEach(u => {
+        const fila = `
+          <tr>
+            <td>${u.id}</td>
+            <td>${u.nombre}</td>
+            <td>${u.email}</td>
+            <td>${u.edad}</td>
+            <td>
+              <button onclick="editar(${u.id}, '${u.nombre}', '${u.email}', ${u.edad})">✏️</button>
+              <button onclick="eliminar(${u.id})">🗑️</button>
+            </td>
+          </tr>`;
+        tabla.innerHTML += fila;
+      });
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const usuario = {
+        nombre: nombreInput.value,
+        email: emailInput.value,
+        edad: parseInt(edadInput.value)
+      };
+
+      if (idInput.value) {
+        // Editar
+        await fetch(`/usuarios/${idInput.value}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(usuario)
+        });
+      } else {
+        // Crear
+        await fetch('/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(usuario)
+        });
+      }
+
+      form.reset();
+      idInput.value = '';
+      cargarUsuarios();
+    });
+
+    async function eliminar(id) {
+      await fetch(`/usuarios/${id}`, { method: 'DELETE' });
+      cargarUsuarios();
+    }
+
+    function editar(id, nombre, email, edad) {
+      idInput.value = id;
+      nombreInput.value = nombre;
+      emailInput.value = email;
+      edadInput.value = edad;
+    }
+
+    cargarUsuarios();
+  </script>
+</body>
+</html>-->
+<!--<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD Usuarios con Notificaciones</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    input { margin: 5px; padding: 5px; }
+    button { padding: 6px 12px; cursor: pointer; }
+    table { margin-top: 20px; border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    tr:hover { background-color: #f5f5f5; }
+    /* Toast */
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      margin-left: -125px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 5px;
+      padding: 16px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      font-size: 17px;
+    }
+    #toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+  </style>
+</head>
+<body>
+  <h1>👥 CRUD de Usuarios</h1>
+
+  <form id="form">
+    <input type="hidden" id="id">
+    <input type="text" id="nombre" placeholder="Nombre" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="number" id="edad" placeholder="Edad" required>
+    <button type="submit">Guardar</button>
+  </form>
+
+  <table id="tabla">
+    <thead>
+      <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Edad</th><th>Acciones</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="toast"></div>
+
+  <script>
+    const form = document.getElementById('form');
+    const tabla = document.querySelector('#tabla tbody');
+    const idInput = document.getElementById('id');
+    const nombreInput = document.getElementById('nombre');
+    const emailInput = document.getElementById('email');
+    const edadInput = document.getElementById('edad');
+    const toast = document.getElementById('toast');
+
+    function mostrarToast(msg) {
+      toast.textContent = msg;
+      toast.className = "show";
+      setTimeout(() => { toast.className = toast.className.replace("show",""); }, 3000);
+    }
+
+    async function cargarUsuarios() {
+      const res = await fetch('/usuarios');
+      const data = await res.json();
+      tabla.innerHTML = '';
+      data.forEach(u => {
+        const fila = `
+          <tr>
+            <td>${u.id}</td>
+            <td>${u.nombre}</td>
+            <td>${u.email}</td>
+            <td>${u.edad}</td>
+            <td>
+              <button onclick="editar(${u.id}, '${u.nombre}', '${u.email}', ${u.edad})">✏️</button>
+              <button onclick="eliminar(${u.id})">🗑️</button>
+            </td>
+          </tr>`;
+        tabla.innerHTML += fila;
+      });
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const usuario = {
+        nombre: nombreInput.value,
+        email: emailInput.value,
+        edad: parseInt(edadInput.value)
+      };
+
+      if (idInput.value) {
+        // Editar
+        await fetch(`/usuarios/${idInput.value}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(usuario)
+        });
+        mostrarToast("✏️ Usuario actualizado");
+      } else {
+        // Crear
+        await fetch('/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(usuario)
+        });
+        mostrarToast("✅ Usuario creado");
+      }
+
+      form.reset();
+      idInput.value = '';
+      cargarUsuarios();
+    });
+
+    async function eliminar(id) {
+      await fetch(`/usuarios/${id}`, { method: 'DELETE' });
+      mostrarToast("🗑️ Usuario eliminado");
+      cargarUsuarios();
+    }
+
+    function editar(id, nombre, email, edad) {
+      idInput.value = id;
+      nombreInput.value = nombre;
+      emailInput.value = email;
+      edadInput.value = edad;
+    }
+
+    cargarUsuarios();
+  </script>
+</body>
+</html>-->
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD Usuarios con Búsqueda</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    input { margin: 5px; padding: 5px; }
+    button { padding: 6px 12px; cursor: pointer; }
+    table { margin-top: 20px; border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    tr:hover { background-color: #f5f5f5; }
+    #toast {
+      visibility: hidden; min-width: 250px; margin-left: -125px;
+      background-color: #333; color: #fff; text-align: center;
+      border-radius: 5px; padding: 16px; position: fixed;
+      z-index: 1; left: 50%; bottom: 30px; font-size: 17px;
+    }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    @keyframes fadein { from {bottom:0; opacity:0;} to {bottom:30px; opacity:1;} }
+    @keyframes fadeout { from {bottom:30px; opacity:1;} to {bottom:0; opacity:0;} }
+  </style>
+</head>
+<body>
+  <h1>👥 CRUD de Usuarios con Búsqueda</h1>
+
+  <!-- Formulario de creación/edición -->
+  <form id="form">
+    <input type="hidden" id="id">
+    <input type="text" id="nombre" placeholder="Nombre" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="number" id="edad" placeholder="Edad" required>
+    <button type="submit">Guardar</button>
+  </form>
+
+  <!-- Búsqueda -->
+  <input type="text" id="buscar" placeholder="Buscar por nombre o email..." style="width:300px; margin-top:10px; padding:5px;">
+
+  <!-- Tabla de usuarios -->
+  <table id="tabla">
+    <thead>
+      <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Edad</th><th>Acciones</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="toast"></div>
+
+  <script>
+    const form = document.getElementById('form');
+    const tabla = document.querySelector('#tabla tbody');
+    const idInput = document.getElementById('id');
+    const nombreInput = document.getElementById('nombre');
+    const emailInput = document.getElementById('email');
+    const edadInput = document.getElementById('edad');
+    const toast = document.getElementById('toast');
+    const buscarInput = document.getElementById('buscar');
+
+    let usuarios = [];
+
+    function mostrarToast(msg) {
+      toast.textContent = msg;
+      toast.className = "show";
+      setTimeout(() => { toast.className = toast.className.replace("show",""); }, 3000);
+    }
+
+    async function cargarUsuarios() {
+      const res = await fetch('/usuarios');
+      usuarios = await res.json();
+      mostrarUsuarios(usuarios);
+    }
+
+    function mostrarUsuarios(lista) {
+      tabla.innerHTML = '';
+      lista.forEach(u => {
+        const fila = `
+          <tr>
+            <td>${u.id}</td>
+            <td>${u.nombre}</td>
+            <td>${u.email}</td>
+            <td>${u.edad}</td>
+            <td>
+              <button onclick="editar(${u.id}, '${u.nombre}', '${u.email}', ${u.edad})">✏️</button>
+              <button onclick="eliminar(${u.id})">🗑️</button>
+            </td>
+          </tr>`;
+        tabla.innerHTML += fila;
+      });
+    }
+
+    // Filtrar usuarios por nombre o email
+    buscarInput.addEventListener('input', () => {
+      const term = buscarInput.value.toLowerCase();
+      const filtrados = usuarios.filter(u => 
+        u.nombre.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)
+      );
+      mostrarUsuarios(filtrados);
+    });
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const usuario = {
+        nombre: nombreInput.value,
+        email: emailInput.value,
+        edad: parseInt(edadInput.value)
+      };
+
+      if (idInput.value) {
+        await fetch(`/usuarios/${idInput.value}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(usuario)
+        });
+        mostrarToast("✏️ Usuario actualizado");
+      } else {
+        await fetch('/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(usuario)
+        });
+        mostrarToast("✅ Usuario creado");
+      }
+
+      form.reset();
+      idInput.value = '';
+      cargarUsuarios();
+    });
+
+    async function eliminar(id) {
+      await fetch(`/usuarios/${id}`, { method: 'DELETE' });
+      mostrarToast("🗑️ Usuario eliminado");
+      cargarUsuarios();
+    }
+
+    function editar(id, nombre, email, edad) {
+      idInput.value = id;
+      nombreInput.value = nombre;
+      emailInput.value = email;
+      edadInput.value = edad;
+    }
+
+    cargarUsuarios();
+  </script>
+</body>
+</html>
