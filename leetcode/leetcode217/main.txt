@@ -1,0 +1,36 @@
+package main
+
+import (
+	"fmt"
+)
+
+// ===========================
+//   Contains Duplicate
+// ===========================
+
+func containsDuplicate(nums []int) bool {
+	seen := make(map[int]bool)
+
+	for _, n := range nums {
+		if seen[n] {
+			return true
+		}
+		seen[n] = true
+	}
+	return false
+}
+
+func main() {
+	// Ejemplos para probar la función
+	examples := [][]int{
+		{1, 2, 3, 1},
+		{1, 2, 3, 4},
+		{2, 14, 18, 22, 14},
+		{7, 8, 9},
+	}
+
+	for _, nums := range examples {
+		fmt.Printf("Entrada: %v → ¿Tiene duplicados? %v\n",
+			nums, containsDuplicate(nums))
+	}
+}
